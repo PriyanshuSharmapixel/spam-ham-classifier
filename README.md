@@ -1,93 +1,93 @@
-# spam-ham-classifier
+# SMS Spam Classifier
 
-> Streamlit application for classifying email and SMS spam using machine learning.
+A text classification project that takes a message, cleans it, converts it to TF-IDF features, and predicts **Spam** or **Not Spam** in a Streamlit app. The repository includes the training notebook, dataset, and serialized vectorizer and model used by the app.
 
-![GitHub stars](https://img.shields.io/github/stars/PriyanshuSharmapixel/spam-ham-classifier?style=for-the-badge&logo=github) ![GitHub forks](https://img.shields.io/github/forks/PriyanshuSharmapixel/spam-ham-classifier?style=for-the-badge&logo=github) ![GitHub issues](https://img.shields.io/github/issues/PriyanshuSharmapixel/spam-ham-classifier?style=for-the-badge&logo=github) ![Last commit](https://img.shields.io/github/last-commit/PriyanshuSharmapixel/spam-ham-classifier?style=for-the-badge&logo=github) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+## Project snapshot
 
-## 📑 Table of Contents
+| Item | Detail |
+| --- | --- |
+| Task | Binary classification of SMS messages (`ham = 0`, `spam = 1`) |
+| Dataset | `spam.csv`, with 5,572 rows before cleaning |
+| After cleaning | 5,169 unique messages: 4,516 ham and 653 spam |
+| Text representation | `TfidfVectorizer(max_features=3000)` |
+| App model | `MultinomialNB`, saved as `model.pkl` |
+| Interface | Streamlit text input and a Spam / Not Spam prediction |
 
-- [Description](#description)
-- [Key Features](#key-features)
-- [Use Cases](#use-cases)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Key Dependencies](#key-dependencies)
-- [Project Structure](#project-structure)
-- [Development Setup](#development-setup)
-- [Contributing](#contributing)
+The cleaned dataset has about **12.6% spam**. A model that predicts only ham would already be correct on about **87.4%** of those messages, so accuracy alone is not enough to assess spam detection.
 
-## 📝 Description
+## What I built
 
-spam-ham-classifier is a Python-based machine learning project designed to identify and filter SMS and email spam. By utilizing pre-trained classification models, the project addresses the challenge of identifying unsolicited or malicious messages. It packages both the model training methodology and an interactive application deployment into a single, accessible repository.
+The notebook in [`sms-spam-detection(FINAL).ipynb`](sms-spam-detection%28FINAL%29.ipynb) covers:
 
-## ✨ Key Features
+1. **Cleaning:** retain the label and message columns, encode ham/spam as 0/1, and remove 403 duplicate rows.
+2. **Exploration:** compare class counts, message length, word count, and sentence count; inspect frequent words in each class.
+3. **Text preprocessing:** lowercase, tokenize, remove non-alphanumeric tokens and English stop words, then apply Porter stemming.
+4. **Feature extraction:** convert processed messages into TF-IDF vectors with at most 3,000 features.
+5. **Model experiments:** code for three Naive Bayes variants, additional classifiers, and voting and stacking ensembles, evaluated with accuracy and spam-class precision.
+6. **App artifacts:** serialize the TF-IDF vectorizer and a fitted Multinomial Naive Bayes classifier for inference.
 
-- **🎈 Streamlit Interactive UI** — Provides an interactive web interface using Streamlit to allow users to input text and view classification results in real-time.
-- **✂️ NLTK Preprocessing Pipeline** — Cleans text inputs by tokenizing, removing stop words and punctuation, and applying Porter Stemming via the NLTK library.
-- **📦 Serialized Model Deployment** — Loads a pre-trained vectorizer and classification model directly from pickled file inputs to process and predict input messages.
-- **📓 Model Exploration Notebook** — Includes a comprehensive Jupyter Notebook detailing the data preparation, model comparison, and training workflows.
+[`app.py`](app.py) applies the same text transformation, loads `vectorizer.pkl` and `model.pkl`, and displays the predicted label. Its interface accepts free text, but the training data in this repository consists of SMS messages; performance on full email messages has not been established.
 
-## 🎯 Use Cases
+## Results and evaluation status
 
-- Interactively testing and classifying suspicious SMS or email texts using a web interface.
-- Demonstrating a complete machine learning pipeline from NLTK-based text preprocessing to model inference.
-- Serving as a reference template for deploying pickled scikit-learn or similar classification models via Streamlit.
+| Measure | Value visible in the committed notebook |
+| --- | ---: |
+| Original messages | 5,572 |
+| Duplicate rows removed | 403 |
+| Unique messages used | 5,169 |
+| Ham / spam | 4,516 / 653 |
+| Test split configured in code | 20%, `random_state=2` |
 
-## 🛠️ Tech Stack
+**Model accuracy and precision are calculated in notebook code, but their printed outputs are not saved in the committed notebook.** The repository therefore does not currently provide a verifiable numerical model score. The UI demonstrates inference with the saved artifacts; it is not a substitute for a documented holdout evaluation.
 
-- 🐍 **Python**
+There is also an evaluation limitation to address before reporting scores: the notebook fits TF-IDF on all cleaned messages **before** splitting train and test data. That allows the test messages to influence the vocabulary and IDF weights. For a reliable result, split the messages first and fit the vectorizer only on training data, ideally inside a scikit-learn `Pipeline`. Then report the confusion matrix, spam precision, spam recall, F1, and test-set class counts alongside accuracy.
 
-## ⚡ Quick Start
+## Run the app
 
 ```bash
-
-# 1. Clone the repository
-git clone https://github.com/PriyanshuSharmapixel/spam-ham-classifier/tree/main.git
-
-# 2. Create & activate a virtualenv
-python -m venv venv && source venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
+git clone https://github.com/PriyanshuSharmapixel/spam-ham-classifier.git
+cd spam-ham-classifier
+python -m venv .venv
 ```
 
-## 📦 Key Dependencies
+Activate the environment, install the app dependencies, and start Streamlit:
 
-```
-streamlit: latest
-nltk: latest
-```
+```bash
+# macOS / Linux
+source .venv/bin/activate
 
-## 📁 Project Structure
-
-```
-.
-├── app.py
-├── model.pkl
-├── requirements.txt
-├── sms-spam-detection(FINAL).ipynb
-└── vectorizer.pkl
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+streamlit run app.py
 ```
 
-## 🛠️ Development Setup
+The app downloads the NLTK resources `punkt`, `punkt_tab`, and `stopwords` at startup. An internet connection may be needed on the first run. Enter a message and select **Predict**. The app reads `model.pkl` and `vectorizer.pkl` from the current directory, so launch it from the repository root.
 
-### Python
-1. Install Python (v3.10+ recommended)
-2. `python -m venv venv && source venv/bin/activate`  (Windows: `venv\Scripts\activate`)
-3. `pip install -r requirements.txt`
+## Reproduce the notebook
 
-## 👥 Contributing
+The app's `requirements.txt` contains `streamlit`, `nltk`, and `scikit-learn`. To run **all notebook experiments and plots**, install the additional libraries used there, including `numpy`, `pandas`, `matplotlib`, `seaborn`, `wordcloud`, `xgboost`, and `jupyter`.
 
-Contributions are welcome! Here's the standard flow:
+The notebook currently reads `spam.csv` from an absolute Windows path. Change that cell to:
 
-1. **Fork** the repository
-2. **Clone** your fork: `git clone https://github.com/PriyanshuSharmapixel/spam-ham-classifier/tree/main.git`
-3. **Branch**: `git checkout -b feature/your-feature`
-4. **Commit**: `git commit -m 'feat: add some feature'`
-5. **Push**: `git push origin feature/your-feature`
-6. **Open** a pull request
+```python
+df = pd.read_csv("spam.csv", encoding="latin1")
+```
 
-Please follow the existing code style and include tests for new behavior where applicable.
+Then run the notebook from the repository root. Its model cells do not contain saved scores, and the preprocessing order noted above should be fixed before publishing new performance claims.
 
----
-*This README was generated with ❤️ by [ReadmeBuddy](https://readmebuddy.com)*
+## Repository files
+
+| File | Purpose |
+| --- | --- |
+| [`app.py`](app.py) | Streamlit prediction interface and inference preprocessing |
+| [`sms-spam-detection(FINAL).ipynb`](sms-spam-detection%28FINAL%29.ipynb) | Data cleaning, exploration, model experiments, and artifact export |
+| [`spam.csv`](spam.csv) | SMS messages used by the notebook |
+| `vectorizer.pkl`, `model.pkl` | Serialized TF-IDF vectorizer and Multinomial Naive Bayes model used by the app |
+| [`requirements.txt`](requirements.txt), [`nltk.txt`](nltk.txt) | App dependencies and NLTK resource list |
+
+## Next improvements
+
+- Move the train/test split ahead of vectorizer fitting and save a reproducible evaluation report.
+- Compare models using spam recall and precision as well as accuracy; document the false-positive / false-negative tradeoff.
+- Pin compatible dependency versions and make the notebook use relative paths so the training workflow runs on a new machine.
+- Add a few representative app examples and validate empty input before predicting.
